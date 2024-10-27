@@ -1,6 +1,6 @@
 package main
 
-/*s */
+/* */
 
 import "fmt"
 
