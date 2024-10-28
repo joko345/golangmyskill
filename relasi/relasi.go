@@ -25,4 +25,8 @@ func main() {
 	}
 	var equal = (2 == 2)
 	fmt.Print("nilai \n", equal)
+
+	for i := 0; i <= 5; i++ {
+		fmt.Println(i)
+	}
 }
