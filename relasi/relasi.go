@@ -61,10 +61,17 @@ func main() {
 	names[0] = "berubah"
 	names = append(names, "ketiga")
 	printMsg("halo", names)
-
+	personName, personAge := getPersonInfo()
+	fmt.Println(personAge, personName)
 }
 
 func printMsg(message string, arr []string) {
 	var nameString = strings.Join(arr, "") //fungsi join names
 	fmt.Println(message, nameString)
+}
+
+func getPersonInfo() (string, int) { //return dua nilai
+	name2 := "Alice"
+	age2 := 25
+	return name2, age2
 }
