@@ -6,6 +6,21 @@ import (
 )
 
 func main() {
+	var getMinMax = func(n []int) (int, int) { //function dalam var
+		var min, max int
+		for i, value := range n {
+			switch {
+			case i == 0:
+				max, min = value, value
+			case value > max:
+				max = value
+			case value < min:
+				min = value
+			}
+		}
+		return min, max
+	}
+
 	var point = 8
 	if point == 10 && point < 20 {
 		fmt.Println("lulus sempurna")
@@ -63,6 +78,15 @@ func main() {
 	printMsg("halo", names)
 	personName, personAge := getPersonInfo()
 	fmt.Println(personAge, personName)
+
+	var avg = calculate(2, 4, 3, 5, 4, 3, 3, 5, 5, 3)
+	var msg = fmt.Sprintf("rata-rata %.2f", avg)
+	fmt.Println(msg)
+
+	var numbers2 = []int{2, 3, 4, 3, 4, 2, 3}
+	var min, max = getMinMax(numbers2) //panggil variabe
+	fmt.Printf("data : %v\nmin : %v\nmax : %v\n", numbers2, min, max)
+
 }
 
 func printMsg(message string, arr []string) {
@@ -74,4 +98,13 @@ func getPersonInfo() (string, int) { //return dua nilai
 	name2 := "Alice"
 	age2 := 25
 	return name2, age2
+}
+
+func calculate(numbers ...int) float64 { //int menjadi array int
+	var total int = 0
+	for _, number := range numbers {
+		total += number //looping _, 0+array number
+	}
+	var avg = float64(total) / float64(len(numbers))
+	return avg
 }
