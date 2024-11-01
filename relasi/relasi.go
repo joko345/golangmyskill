@@ -6,7 +6,7 @@ import (
 )
 
 func main() {
-	var getMinMax = func(n []int) (int, int) { //function dalam var
+	var getMinMax = func(n []int) (int, int) { //func dalam var. func closure
 		var min, max int
 		for i, value := range n {
 			switch {
@@ -87,6 +87,10 @@ func main() {
 	var min, max = getMinMax(numbers2) //panggil variabe
 	fmt.Printf("data : %v\nmin : %v\nmax : %v\n", numbers2, min, max)
 
+	var hasilFilter = filter([]string{"ini", "data"}, func(each string) bool {
+		return true
+	})
+	fmt.Println(hasilFilter)
 }
 
 func printMsg(message string, arr []string) {
@@ -100,11 +104,23 @@ func getPersonInfo() (string, int) { //return dua nilai
 	return name2, age2
 }
 
-func calculate(numbers ...int) float64 { //int menjadi array int
+func calculate(numbers ...int) float64 { //int menjadi array int. titik tiga (func variadic)
 	var total int = 0
 	for _, number := range numbers {
+		//	_, digunakan sebagai penerima kosong untuk mengabaikan nilai indeks yang dihasilkan dari range.
+		//hanya membutuhkan value (each) dan tidak peduli dengan indeksnya.
 		total += number //looping _, 0+array number
 	}
 	var avg = float64(total) / float64(len(numbers))
 	return avg
+}
+
+func filter(data []string, callback func(string) bool) []string { //func menerima string dan callback/mengembalikan boolean
+	var result []string
+	for _, each := range data {
+		if filtered := callback(each); filtered { // jika lolos maka callback ke result yang bernilai array string
+			result = append(result, each) //add each ke result
+		}
+	}
+	return result
 }
