@@ -6,6 +6,9 @@ import (
 )
 
 type user struct { //decode json ke var
+	FullName4 string `json:"Name4"` // Field yang sesuai dengan JSON
+	Age4      int    `json:"Age4"`  // Field yang sesuai dengan JSON
+
 	FullName string `json:"Name"`
 	Age      int
 }
@@ -26,6 +29,17 @@ func main() {
 	var decodedData = data2.(map[string]interface{})
 	fmt.Println("user:", decodedData["Name1"])
 	fmt.Println("user:", decodedData["Age1"])
+
+	//json dalam array
+	var jsonString4 = `[{"Name4": "Son", "Age4":27}, {"Name4": "Sonah", "Age4":27}]`
+	var data4 []user
+	var err4 = json.Unmarshal([]byte(jsonString4), &data4)
+	if err4 != nil {
+		fmt.Println(err4.Error())
+		return
+	}
+	fmt.Println("4user 1 :", data4[0].FullName4)
+	fmt.Println("4user 2 :", data4[1].FullName4)
 
 	//struk
 	var jsonString = `{"Name": "Jon", "Age":27}`
