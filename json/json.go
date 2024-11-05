@@ -9,11 +9,27 @@ type user struct { //decode json ke var
 	FullName4 string `json:"Name4"` // Field yang sesuai dengan JSON
 	Age4      int    `json:"Age4"`  // Field yang sesuai dengan JSON
 
+	FullName5 string `json:"Name5"`
+	Age5      int    `json:"Age5"`
+
 	FullName string `json:"Name"`
 	Age      int
 }
 
 func main() {
+
+	//struk
+	var jsonString = `{"Name": "Jon", "Age":27}`
+	var jsonData = []byte(jsonString)         //mengubah jsonstring ke byte untuk umarshal
+	var data user                             // var data dengan tipe user
+	var err = json.Unmarshal(jsonData, &data) //konversi json dan simpan di var data
+	if err != nil {
+		fmt.Println(err.Error())
+		return
+	}
+	fmt.Println("user:", data.FullName)
+	fmt.Println("user:", data.Age)
+
 	//interface
 	var jsonString2 = `{"Name1": "Json", "Age1":27}`
 	var jsonData2 = []byte(jsonString2)
@@ -41,15 +57,13 @@ func main() {
 	fmt.Println("4user 1 :", data4[0].FullName4)
 	fmt.Println("4user 2 :", data4[1].FullName4)
 
-	//struk
-	var jsonString = `{"Name": "Jon", "Age":27}`
-	var jsonData = []byte(jsonString)         //mengubah jsonstring ke byte untuk umarshal
-	var data user                             // var data dengan tipe user
-	var err = json.Unmarshal(jsonData, &data) //konversi json dan simpan di var data
-	if err != nil {
-		fmt.Println(err.Error())
+	//encode dari go ke json
+	var data5 = []user{{FullName: "Son", Age: 27}, {FullName: "Sonah", Age: 30}}
+	jsonData5, err5 := json.Marshal(data5) // ambil data5 dan ubah ke json(marshall)
+	if err5 != nil {
+		fmt.Println("Error encoding JSON:", err5)
 		return
 	}
-	fmt.Println("user:", data.FullName)
-	fmt.Println("user:", data.Age)
+	fmt.Println("Hasil JSON:", string(jsonData5))
+
 }
