@@ -32,11 +32,11 @@ func getMovies(w http.ResponseWriter, r *http.Request) {
 
 func deleteMovie(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	params := mux.Vars(r)
-	for index, item := range movies {
-		if item.ID == params["id"] {
-			movies = append(movies[:index], movies[index+1:]...)
-			break
+	params := mux.Vars(r)             //parameter meneriman var dari URL
+	for index, item := range movies { //cari id dari kumpulan slice
+		if item.ID == params["id"] { //jenis parameter ID maka params menerima value ID
+			movies = append(movies[:index], movies[index+1:]...) //mengambil id dari kumpulan id dan menghapusnya
+			break                                                //jika id 3 maka hapus 3 dari dempetan sesudah 2 dan sebelum 4
 		}
 	}
 	json.NewEncoder(w).Encode(movies)
@@ -57,7 +57,7 @@ func createMovie(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	var movie Movie
 	_ = json.NewDecoder(r.Body).Decode(&movie)
-	movie.ID = strconv.Itoa(rand.Intn(100))
+	movie.ID = strconv.Itoa(rand.Intn(100000))
 	movies = append(movies, movie)
 	json.NewEncoder(w).Encode(movie)
 }
@@ -65,17 +65,20 @@ func createMovie(w http.ResponseWriter, r *http.Request) {
 func updateMovie(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	params := mux.Vars(r)
-	var movie Movie
+	var updatedMovie Movie
+	_ = json.NewDecoder(r.Body).Decode(&updatedMovie)
+
 	for index, item := range movies {
-		if item.ID == params["id"] {
-			movies = append(movies[:index], movies[index+1:]...)
-			_ = json.NewDecoder(r.Body).Decode(&movie)
-			movie.ID = params["id"]
-			movies = append(movies, movie)
-			json.NewEncoder(w).Encode(movie)
+		if item.ID == params["id"] { //mencari id
+			updatedMovie.ID = params["id"] // update berdasarkan id
+			movies[index] = updatedMovie
+			json.NewEncoder(w).Encode(updatedMovie) //print data baru ke body
 			return
 		}
 	}
+
+	// Jika ID tidak ditemukan, berikan respons kosong
+	http.Error(w, "Movie not found", http.StatusNotFound)
 }
 
 func main() {
@@ -86,8 +89,8 @@ func main() {
 	r.HandleFunc("/movies", getMovies).Methods("GET")
 	r.HandleFunc("/movies/{id}", findMovie).Methods("GET")
 	r.HandleFunc("/movies", createMovie).Methods("POST")
-	r.HandleFunc("/movies", updateMovie).Methods("PUT")
-	r.HandleFunc("/movies", deleteMovie).Methods("DELETE")
+	r.HandleFunc("/movies/{id}", updateMovie).Methods("PUT")
+	r.HandleFunc("/movies/{id}", deleteMovie).Methods("DELETE")
 
 	fmt.Printf("starting at port 8000\n")
 	log.Fatal(http.ListenAndServe(":8000", r))
