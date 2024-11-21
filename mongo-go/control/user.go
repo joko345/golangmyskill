@@ -1,85 +1,132 @@
 package control
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/joko345/golangmyskill/mongo-go/models"
 	"github.com/julienschmidt/httprouter"
-	"gopkg.in/mgo.v2"
-	"gopkg.in/mgo.v2/bson"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
+// UserControl mengelola operasi CRUD untuk user
 type UserControl struct {
-	session *mgo.Session
+	client *mongo.Client
 }
 
-func NewUserControl(s *mgo.Session) *UserControl {
-	return &UserControl{s}
+// NewUserControl membuat instance baru dari UserControl
+func NewUserControl(client *mongo.Client) *UserControl {
+	return &UserControl{client}
 }
 
+// GetUser mendapatkan user berdasarkan ID
 func (uc UserControl) GetUser(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
-	id := p.ByName("id") // deklarasi id untuk id pada mongodb
+	id := p.ByName("id") // Mendapatkan ID dari parameter URL
 
-	if !bson.IsObjectIdHex(id) {
-		w.WriteHeader(http.StatusNotFound) // respon
-		return
-	}
-
-	oid := bson.ObjectIdHex(id) // cek apakah id hex/numerik
-
-	u := models.User{}                                                                   // struct user
-	if err := uc.session.DB("mongo-golang").C("users").FindId(oid).One(&u); err != nil { // users adalah nama koleksi/tabel
-		w.WriteHeader(http.StatusNotFound) // cari id dengan value oid di mongodb yang diwakili variable u
-		return
-	}
-
-	uj, err := json.Marshal(u) // simpan data ke json uj
+	// Validasi ID apakah berbentuk ObjsectId
+	objectID, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
+
+	// Koneksi ke database dan koleksi
+	collection := uc.client.Database("mongo-golang").Collection("users")
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	// Cari user berdasarkan ID
+	var user models.User
+	err = collection.FindOne(ctx, bson.M{"_id": objectID}).Decode(&user)
+	if err != nil {
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
+
+	// Konversi data user ke JSON
+	uj, err := json.Marshal(user)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
 		fmt.Println(err)
 		return
 	}
 
+	// Kirim data sebagai respon
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	fmt.Fprintf(w, "%s\n", uj) // print value ke body sebagai respon
+	fmt.Fprintf(w, "%s\n", uj)
 }
 
+// CreateUser membuat user baru
 func (uc UserControl) CreateUser(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	u := models.User{}
+	var user models.User
 
-	json.NewDecoder(r.Body).Decode(&u) // decode data json ke format mongodb
-
-	u.Id = bson.NewObjectId() // buat id otomatis
-
-	uc.session.DB("mongo-golang").C("users").Insert(u)
-	// setelah input ubah data ke json lagi dan kirim ke user
-	uj, err := json.Marshal(u)
-
+	// Decode data JSON dari body request
+	err := json.NewDecoder(r.Body).Decode(&user)
 	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
 		fmt.Println(err)
 		return
 	}
+
+	// Buat ID baru untuk user
+	user.Id = primitive.NewObjectID()
+
+	// Koneksi ke database dan koleksi
+	collection := uc.client.Database("mongo-golang").Collection("users")
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	// Simpan data ke MongoDB
+	_, err = collection.InsertOne(ctx, user)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Println(err)
+		return
+	}
+
+	// Konversi data user ke JSON dan kirimkan respon
+	uj, err := json.Marshal(user)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Println(err)
+		return
+	}
+
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
 	fmt.Fprintf(w, "%s\n", uj)
 }
 
+// DeleteUser menghapus user berdasarkan ID
 func (uc UserControl) DeleteUser(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	id := p.ByName("id")
 
-	if !bson.IsObjectIdHex(id) {
-		w.WriteHeader(http.StatusNotFound)
-		return
-	}
-	oid := bson.ObjectIdHex(id)
-
-	if err := uc.session.DB("mongo-golang").C("users").RemoveId(oid); err != nil {
+	// Validasi ID apakah berbentuk ObjectId
+	objectID, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
 		w.WriteHeader(http.StatusNotFound)
 		return
 	}
 
+	// Koneksi ke database dan koleksi
+	collection := uc.client.Database("mongo-golang").Collection("users")
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	// Hapus user berdasarkan ID
+	_, err = collection.DeleteOne(ctx, bson.M{"_id": objectID})
+	if err != nil {
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
+
+	// Kirimkan respon sukses
 	w.WriteHeader(http.StatusOK)
-	fmt.Fprintf(w, "Deleted User: %s\n", oid)
+	fmt.Fprintf(w, "Deleted User: %s\n", id)
 }
