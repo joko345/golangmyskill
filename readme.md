@@ -2,7 +2,7 @@ go mod init "nama package"
 go get go.mongodb.org/mongo-driver/mongo
 
 go run test.go
-
+ss
 %.2f adalah spesifier menampilkan angka desimal 2.10
 fprintf (prind ke layar bukan ke console seperti printf)
 %s untuk print variable yang di input

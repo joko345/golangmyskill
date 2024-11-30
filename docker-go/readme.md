@@ -1,7 +1,7 @@
 go mod init github.com/joko345/golangmyskill
 go mod tidy
 docker build -t "docker-go" .
-docker run -p 8080:8081 -it docker-go
+docker run -p 8080:8080 -it docker-go
 
 FROM golang:alpine //versi golang dan provider gambar
 RUN mkdir /app
