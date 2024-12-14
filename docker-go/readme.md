@@ -7,6 +7,7 @@ FROM golang:alpine //versi golang dan provider gambar
 RUN mkdir /app
 ADD . /app
 WORKDIR /app
+
 RUN go build -o main
 CMD ["/app/main"]
 //docker menjalankan perintah layaknya cmd ubuntu
